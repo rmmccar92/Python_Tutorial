@@ -1,6 +1,6 @@
 
 import email
-from app.models import User
+from app.models import User, Post, Comment, Vote
 from app.db import get_db
 from flask import Blueprint, request, jsonify, session
 import sys
@@ -55,3 +55,25 @@ def login():
     except:
         print(sys.exc_info()[0])
         return jsonify(message='Incorrect credentials'), 400
+
+
+@bp.route('/comments', methods=['POST'])
+def comment():
+    data = request.get_json()
+    db = get_db()
+    try:
+        newComment = Comment(
+            comment_text=data['comment_text'],
+            post_id=data['post_id'],
+            user_id=session.get('user_id')
+        )
+
+        db.add(newComment)
+        db.commit()
+    except:
+        print(sys.exc_info()[0])
+
+        db.rollback()
+        return jsonify(message="Comment Failed"), 500
+
+    return jsonify(id=newComment.id)
